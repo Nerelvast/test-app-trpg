@@ -88,6 +88,49 @@ textarea{min-height:80px!important;resize:vertical}
 #toast.show{opacity:1}
 @media(prefers-reduced-motion:reduce){#toast{transition:none}}
 #copybox{width:100%;height:140px;font:12px monospace;margin-top:8px;display:none}
+body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+[hidden]{display:none!important}
+.fab{bottom:calc(84px + env(safe-area-inset-bottom))}
+#toast{bottom:calc(156px + env(safe-area-inset-bottom))}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:7;display:flex;background:var(--card);border-top:1px solid var(--line);padding:4px max(8px,env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+.bnav button{flex:1;min-height:56px;border:0;background:transparent;color:var(--mute);font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border-radius:12px}
+.bnav button svg{width:24px;height:24px}
+.bnav button.on{color:var(--wine2)}
+:root:not([data-theme=light]) .bnav button.on{color:light-dark(var(--wine2),#f08aa4)}
+.filters.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.month{font:600 15px/1.2 Georgia,serif;margin:18px 2px 8px;display:flex;justify-content:space-between}
+.month span{color:var(--mute);font:13px system-ui,sans-serif}
+.play{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:8px;width:100%;text-align:left;padding:10px 12px 10px 0;cursor:pointer;overflow:hidden}
+.pday{width:58px;flex:none;text-align:center;border-right:4px solid;padding:2px 0}
+.pday b{display:block;font:700 24px/1 Georgia,serif}
+.pday span{font-size:12px;color:var(--mute)}
+.stars{display:flex;gap:4px}
+.stars button{width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--field);font-size:22px;cursor:pointer;color:var(--mute)}
+.stars button.on{color:#d8a01a;border-color:#d8a01a}
+.yearnav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px}
+.yearnav b{font:700 28px/1 Georgia,serif}
+.yearnav .btn{width:48px;font-size:24px;padding:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h4{margin:0 0 10px;font:600 16px/1.2 Georgia,serif}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+@media(max-width:420px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.kpi b{display:block;font:700 24px/1.1 Georgia,serif}
+.kpi span{font-size:12px;color:var(--mute)}
+.cols{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;height:150px;margin-top:6px}
+.col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px}
+.col i{display:block;width:100%;max-width:26px;background:var(--wine2);border-radius:5px 5px 2px 2px;min-height:2px}
+.col.now i{background:var(--sea)}
+.col em{font-style:normal;font-size:11px;color:var(--mute)}
+.col small{font-size:11px;font-weight:700;min-height:14px}
+.hrow{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr) auto;gap:8px;align-items:center;margin:7px 0;font-size:14px}
+.hrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .bar{height:12px;background:var(--field);border-radius:6px;overflow:hidden}
+.hrow .bar i{display:block;height:100%;border-radius:6px}
+.hrow .v{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--mute)}
+.seg{display:flex;gap:6px;margin-bottom:10px}
+.seg button{flex:1;min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--field);cursor:pointer;font-weight:600;font-size:14px}
+.seg button.on{background:var(--wine);color:#fff;border-color:var(--wine)}
 </style>
 </head>
 <body>
@@ -98,6 +141,7 @@ textarea{min-height:80px!important;resize:vertical}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
   </div>
+  <div id="shelfHdr">
   <div class="search"><input id="q" type="search" placeholder="Szukaj: tytuł, system, wydawca, ISBN…" autocomplete="off"></div>
   <div class="tabs" id="tabs">
     <button data-s="all" class="on">Wszystko</button>
@@ -105,9 +149,11 @@ textarea{min-height:80px!important;resize:vertical}
     <button data-s="want">Chcę kupić</button>
     <button data-s="lent">Pożyczone</button>
   </div>
+  </div>
 </header>
 
 <main>
+ <section id="vShelf">
   <div class="filters">
     <select id="fSys" aria-label="System"></select>
     <select id="fType" aria-label="Typ"></select>
@@ -120,9 +166,56 @@ textarea{min-height:80px!important;resize:vertical}
   </div>
   <div class="sum" id="sum"></div>
   <div id="list"></div>
+ </section>
+
+ <section id="vPlays" hidden>
+  <div class="filters two">
+    <select id="pYear" aria-label="Rok"></select>
+    <select id="pSys" aria-label="System"></select>
+  </div>
+  <div class="sum" id="pSum"></div>
+  <div id="pList"></div>
+ </section>
+
+ <section id="vStats" hidden>
+  <div class="yearnav">
+    <button class="btn" id="yPrev" aria-label="Poprzedni rok">‹</button>
+    <b id="yLabel"></b>
+    <button class="btn" id="yNext" aria-label="Następny rok">›</button>
+  </div>
+  <div id="statsBody"></div>
+ </section>
 </main>
 
-<button class="fab" id="addBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Dodaj</button>
+<button class="fab" id="addBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span id="addLbl">Dodaj</span></button>
+
+<nav class="bnav" id="bnav">
+  <button data-v="shelf" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l3.5-1 3 15.5-3.5 1z"/></svg>Półka</button>
+  <button data-v="plays"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><path d="M12 2 7 14h10zM7 14l5 8 5-8"/></svg>Sesje</button>
+  <button data-v="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Statystyki</button>
+</nav>
+
+<div class="sheet" id="playSheet" role="dialog" aria-modal="true" aria-labelledby="plTitle">
+  <form class="panel" id="pform" autocomplete="off">
+    <h3><span id="plTitle">Nowa sesja</span><button type="button" class="x" data-close aria-label="Zamknij">×</button></h3>
+    <div class="grid">
+      <div><label for="p_date">Data *</label><input id="p_date" type="date" required></div>
+      <div><label for="p_hours">Czas gry (godz.)</label><input id="p_hours" inputmode="decimal" placeholder="np. 4 lub 3,5"></div>
+      <div class="full"><label for="p_system">System *</label><input id="p_system" list="sysList" required placeholder="np. Warhammer FRP"></div>
+      <div class="full"><label for="p_campaign">Kampania / przygoda</label><input id="p_campaign" list="campList" placeholder="np. Wewnętrzny Wróg, Curse of Strahd"></div>
+      <div><label for="p_role">Moja rola</label><select id="p_role"><option value="gm">Mistrz Gry</option><option value="player">Gracz</option></select></div>
+      <div><label for="p_mode">Gdzie</label><select id="p_mode"><option>Przy stole</option><option>Online</option><option>Konwent</option></select></div>
+      <div class="full"><label for="p_players">Kto grał</label><input id="p_players" placeholder="np. Ania, Bartek, Kuba"></div>
+      <div class="full"><label>Ocena sesji</label><div class="stars" id="p_stars"></div></div>
+      <div class="full"><label for="p_notes">Notatki</label><textarea id="p_notes" placeholder="Co się wydarzyło, co przygotować na następny raz…"></textarea></div>
+    </div>
+    <div class="btns">
+      <button type="button" class="btn del" id="pDel" hidden>Usuń</button>
+      <button type="submit" class="btn pri">Zapisz sesję</button>
+    </div>
+  </form>
+</div>
+<datalist id="campList"></datalist>
 
 <div class="sheet" id="editSheet" role="dialog" aria-modal="true" aria-labelledby="edTitle">
   <form class="panel" id="form" autocomplete="off">
@@ -165,7 +258,8 @@ textarea{min-height:80px!important;resize:vertical}
     <button class="btn" id="expJson">Zapisz kopię zapasową (.json)</button>
     <button class="btn" id="impJson">Wczytaj kopię zapasową</button>
     <input type="file" id="impFile" accept=".json,application/json" hidden>
-    <button class="btn" id="expCsv">Eksportuj do Excela (.csv)</button>
+    <button class="btn" id="expCsv">Eksportuj podręczniki do Excela (.csv)</button>
+    <button class="btn" id="expPlaysCsv">Eksportuj sesje do Excela (.csv)</button>
     <textarea id="copybox" readonly></textarea>
     <p class="note">Wszystko jest zapisane tylko na tym telefonie. Rób kopię zapasową co jakiś czas i trzymaj ją np. na Dysku Google albo w iCloud.</p>
   </div>
@@ -199,6 +293,12 @@ const DB={db:null,
     try{localStorage.setItem('trpg-books',JSON.stringify(v))}catch(e){toast('Nie udało się zapisać — zrób kopię zapasową!')}}
 };
 const save=()=>DB.set(books);
+/* sesje trzymane pod osobnym kluczem */
+DB.getK=function(k){if(this.db)return new Promise(r=>{try{const t=this.db.transaction('kv').objectStore('kv').get(k);t.onsuccess=()=>r(t.result||null);t.onerror=()=>r(null)}catch(e){r(null)}});
+  try{return JSON.parse(localStorage.getItem('trpg-'+k))}catch(e){return null}};
+DB.setK=function(k,v){if(this.db){try{this.db.transaction('kv','readwrite').objectStore('kv').put(v,k);return}catch(e){}}
+  try{localStorage.setItem('trpg-'+k,JSON.stringify(v))}catch(e){toast('Nie udało się zapisać — zrób kopię zapasową!')}};
+let plays=[];const savePlays=()=>DB.setK('plays',plays);
 
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2400)}
 function hue(s){let h=0;for(const c of String(s).toLowerCase())h=(h*31+c.charCodeAt(0))%360;return h}
@@ -208,7 +308,11 @@ function opts(sel,arr,all){const cur=sel.value;sel.innerHTML=`<option value="">$
 const uniq=k=>[...new Set(books.map(b=>(b[k]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pl'));
 function fillLists(){
   opts($('#fSys'),uniq('system'),'Każdy system');opts($('#fType'),TYPES.filter(t=>books.some(b=>b.type===t)),'Każdy typ');
-  [['#sysList','system'],['#edList','edition'],['#pubList','publisher'],['#locList','loc']].forEach(([id,k])=>$(id).innerHTML=uniq(k).map(v=>`<option value="${esc(v)}">`).join(''));
+  [['#edList','edition'],['#pubList','publisher'],['#locList','loc']].forEach(([id,k])=>$(id).innerHTML=uniq(k).map(v=>`<option value="${esc(v)}">`).join(''));
+  const sys=[...new Set([...books.map(b=>b.system),...plays.map(p=>p.system)].map(s=>(s||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pl'));
+  $('#sysList').innerHTML=sys.map(v=>`<option value="${esc(v)}">`).join('');
+  const camp=[...new Set([...plays.map(p=>p.campaign),...books.filter(b=>/Przygoda/.test(b.type)).map(b=>b.title)].map(s=>(s||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pl'));
+  $('#campList').innerHTML=camp.map(v=>`<option value="${esc(v)}">`).join('');
 }
 function filtered(){
   const q=state.q.toLowerCase().trim();
@@ -238,7 +342,109 @@ function render(){
   const g={};r.forEach(b=>(g[b.system]=g[b.system]||[]).push(b));
   L.innerHTML=Object.entries(g).map(([s,a])=>`<section class="group"><h2>${esc(s)}<span>${a.length}</span></h2>${a.map(card).join('')}</section>`).join('');
 }
-const refresh=()=>{fillLists();render()};
+const refresh=()=>{fillLists();render();if(view==='plays')renderPlays();if(view==='stats')renderStats()};
+
+/* ---------- widoki ---------- */
+let view='shelf';
+const MON=['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+const MONL=['styczniu','lutym','marcu','kwietniu','maju','czerwcu','lipcu','sierpniu','wrześniu','październiku','listopadzie','grudniu'];
+const MONF=['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const hrs=p=>parseFloat(String(p.hours||'').replace(',','.'))||0;
+const fmtH=h=>(Math.round(h*10)/10).toString().replace('.',',');
+const sesje=n=>n===1?'sesja':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?'sesje':'sesji';
+function setView(v){
+  view=v;$('#vShelf').hidden=v!=='shelf';$('#vPlays').hidden=v!=='plays';$('#vStats').hidden=v!=='stats';$('#shelfHdr').hidden=v!=='shelf';
+  $('#addBtn').hidden=v==='stats';$('#addLbl').textContent=v==='plays'?'Sesja':'Dodaj';
+  document.querySelectorAll('#bnav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(v==='plays')renderPlays();if(v==='stats')renderStats();
+  window.scrollTo(0,0);
+}
+$('#bnav').onclick=e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v)};
+
+/* ---------- sesje: lista ---------- */
+let pst={year:'',sys:''};
+function renderPlays(){
+  const years=[...new Set(plays.map(p=>p.date.slice(0,4)))].sort().reverse();
+  opts($('#pYear'),years,'Wszystkie lata');$('#pYear').value=years.includes(pst.year)?pst.year:'';
+  opts($('#pSys'),[...new Set(plays.map(p=>p.system))].sort((a,b)=>a.localeCompare(b,'pl')),'Każdy system');$('#pSys').value=pst.sys&&plays.some(p=>p.system===pst.sys)?pst.sys:'';
+  const r=plays.filter(p=>(!$('#pYear').value||p.date.startsWith($('#pYear').value))&&(!$('#pSys').value||p.system===$('#pSys').value)).sort((a,b)=>b.date.localeCompare(a.date)||b.added-a.added);
+  const L=$('#pList');
+  $('#pSum').textContent=plays.length?`${r.length} ${sesje(r.length)} · ${fmtH(r.reduce((s,p)=>s+hrs(p),0))} godz.`:'';
+  if(!plays.length){L.innerHTML=`<div class="empty"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M50 8 88 30v40L50 92 12 70V30z"/><path d="M50 8 30 58h40zM30 58 50 92l20-34"/></svg><b>Brak zapisanych sesji</b>Stuknij „Sesja”, żeby zapisać pierwszą rozgrywkę.</div>`;return}
+  if(!r.length){L.innerHTML=`<div class="empty"><b>Nic nie pasuje</b>Zmień filtry.</div>`;return}
+  const g={};r.forEach(p=>(g[p.date.slice(0,7)]=g[p.date.slice(0,7)]||[]).push(p));
+  L.innerHTML=Object.entries(g).map(([m,a])=>`<section><div class="month">${MONF[+m.slice(5)-1]} ${m.slice(0,4)}<span>${a.length} ${sesje(a.length)} · ${fmtH(a.reduce((s,p)=>s+hrs(p),0))} h</span></div>${a.map(p=>{
+    const meta=[p.role==='gm'?'MG':'Gracz',hrs(p)?fmtH(hrs(p))+' h':'',p.mode!=='Przy stole'?p.mode:''].filter(Boolean).map(esc).join(' · ');
+    return `<button class="play" data-id="${esc(p.id)}"><span class="pday" style="border-color:hsl(${hue(p.system)} 55% 38%)"><b>${+p.date.slice(8)}</b><span>${MON[+p.date.slice(5,7)-1]}</span></span><span class="binfo" style="padding:0"><span class="bt">${esc(p.system)}${p.campaign?' — '+esc(p.campaign):''}</span><span class="bm" style="display:block">${meta}${p.rating?' · '+'★'.repeat(+p.rating):''}</span>${p.players?`<span class="bm" style="display:block">👥 ${esc(p.players)}</span>`:''}</span></button>`}).join('')}</section>`).join('');
+}
+$('#pYear').onchange=e=>{pst.year=e.target.value;renderPlays()};
+$('#pSys').onchange=e=>{pst.sys=e.target.value;renderPlays()};
+
+/* ---------- sesje: formularz ---------- */
+const PF=['date','hours','system','campaign','role','mode','players','notes'];
+let pEdit=null,rating=0;
+function drawStars(){$('#p_stars').innerHTML=[1,2,3,4,5].map(n=>`<button type="button" data-n="${n}" class="${n<=rating?'on':''}" aria-label="${n} na 5">★</button>`).join('')}
+$('#p_stars').onclick=e=>{const b=e.target.closest('button');if(!b)return;rating=+b.dataset.n===rating?0:+b.dataset.n;drawStars()};
+function editPlay(p){
+  pEdit=p?p.id:null;$('#plTitle').textContent=p?'Edytuj sesję':'Nowa sesja';$('#pDel').hidden=!p;
+  const last=[...plays].sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const d=p||{date:today(),role:last?last.role:'gm',mode:'Przy stole',system:pst.sys||(last?last.system:''),campaign:pst.sys&&last&&last.system!==pst.sys?'':(last?last.campaign:''),players:last&&(!pst.sys||last.system===pst.sys)?last.players:'',hours:''};
+  PF.forEach(k=>$('#p_'+k).value=d[k]??'');rating=p?+p.rating||0:0;drawStars();open('#playSheet');
+}
+$('#pList').onclick=e=>{const c=e.target.closest('.play');if(c)editPlay(plays.find(p=>p.id===c.dataset.id))};
+$('#pform').onsubmit=e=>{
+  e.preventDefault();const d={};PF.forEach(k=>d[k]=$('#p_'+k).value.trim());d.rating=rating;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d.date)){toast('Podaj datę');return}
+  if(pEdit){Object.assign(plays.find(p=>p.id===pEdit),d);toast('Zapisano zmiany')}
+  else{plays.push({...d,id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),added:Date.now()});toast('Sesja zapisana')}
+  savePlays();close($('#playSheet'));refresh();
+};
+$('#pDel').onclick=()=>confirmBox('Usunąć tę sesję?',()=>{plays=plays.filter(p=>p.id!==pEdit);savePlays();close($('#playSheet'));refresh();toast('Usunięto')});
+
+/* ---------- statystyki ---------- */
+let sYear=new Date().getFullYear(),sMetric='n';
+function hbars(rows,unit){const mx=Math.max(1,...rows.map(r=>r[1]));
+  return rows.map(([n,v,c])=>`<div class="hrow"><span class="nm">${esc(n)}</span><span class="bar"><i style="width:${Math.max(2,v/mx*100)}%;background:${c||'var(--sea)'}"></i></span><span class="v">${unit(v)}</span></div>`).join('')}
+function renderStats(){
+  $('#yLabel').textContent=sYear;
+  const B=$('#statsBody'),Y=plays.filter(p=>p.date.startsWith(String(sYear)));
+  if(!plays.length){B.innerHTML=`<div class="empty"><b>Brak danych</b>Statystyki pojawią się po zapisaniu pierwszych sesji.</div>`;return}
+  const H=Y.reduce((s,p)=>s+hrs(p),0),gm=Y.filter(p=>p.role==='gm').length;
+  const m=Array.from({length:12},(_,i)=>{const a=Y.filter(p=>+p.date.slice(5,7)===i+1);return{n:a.length,h:a.reduce((s,p)=>s+hrs(p),0)}});
+  const val=x=>sMetric==='n'?x.n:x.h,mx=Math.max(1,...m.map(val));
+  const now=new Date(),curM=now.getFullYear()===sYear?now.getMonth():-1;
+  const bySys={};Y.forEach(p=>{const o=bySys[p.system]=bySys[p.system]||{n:0,h:0};o.n++;o.h+=hrs(p)});
+  const sysRows=Object.entries(bySys).sort((a,b)=>val(b[1])-val(a[1])||b[1].n-a[1].n).slice(0,8).map(([s,o])=>[s,val(o),`hsl(${hue(s)} 55% 38%)`]);
+  const byCamp={};Y.filter(p=>p.campaign).forEach(p=>{const k=p.campaign;byCamp[k]=(byCamp[k]||0)+1});
+  const campRows=Object.entries(byCamp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([c,n])=>[c,n]);
+  const ppl={};Y.forEach(p=>(p.players||'').split(/[,;]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>ppl[n]=(ppl[n]||0)+1));
+  const pplRows=Object.entries(ppl).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([c,n])=>[c,n,'var(--wine2)']);
+  const best=m.reduce((bi,x,i)=>val(x)>val(m[bi])?i:bi,0);
+  const unitF=v=>sMetric==='n'?String(v):fmtH(v)+' h';
+  const cm=curM>=0?m[curM]:null;
+  const all=plays.length,allH=plays.reduce((s,p)=>s+hrs(p),0);
+  B.innerHTML=`
+  <div class="kpis">
+    <div class="kpi"><b>${Y.length}</b><span>${sesje(Y.length)} w ${sYear}</span></div>
+    <div class="kpi"><b>${fmtH(H)}</b><span>godzin gry</span></div>
+    <div class="kpi"><b>${Object.keys(bySys).length}</b><span>systemów</span></div>
+    <div class="kpi"><b>${Y.length?Math.round(gm/Y.length*100):0}%</b><span>jako MG</span></div>
+  </div>
+  ${cm?`<div class="card"><h4>${MONF[curM]} ${sYear}</h4><div class="bm">${cm.n} ${sesje(cm.n)} · ${fmtH(cm.h)} godz.${curM>0?` · w ${MONL[curM-1]}: ${m[curM-1].n}`:''}</div></div>`:''}
+  <div class="card"><h4>Miesiąc po miesiącu</h4>
+    <div class="seg"><button data-m="n" class="${sMetric==='n'?'on':''}">Sesje</button><button data-m="h" class="${sMetric==='h'?'on':''}">Godziny</button></div>
+    <div class="cols">${m.map((x,i)=>`<div class="col ${i===curM?'now':''}"><small>${val(x)?unitF(val(x)).replace(' h',''):''}</small><i style="height:${val(x)/mx*100}%"></i><em>${MON[i].slice(0,3)}</em></div>`).join('')}</div>
+    ${Y.length?`<p class="note">Najaktywniejszy miesiąc: ${MONF[best].toLowerCase()} (${unitF(val(m[best]))}). Średnio ${fmtH(Y.length/Math.max(1,(curM>=0?curM+1:12)-m.findIndex(x=>x.n>0)))} sesji miesięcznie (licząc od pierwszej sesji w roku).</p>`:`<p class="note">Brak sesji w tym roku.</p>`}
+  </div>
+  ${sysRows.length?`<div class="card"><h4>Systemy</h4>${hbars(sysRows,unitF)}</div>`:''}
+  ${campRows.length?`<div class="card"><h4>Kampanie i przygody</h4>${hbars(campRows,v=>v+' '+sesje(v))}</div>`:''}
+  ${pplRows.length?`<div class="card"><h4>Najczęściej przy stole</h4>${hbars(pplRows,v=>v+'×')}</div>`:''}
+  <div class="card"><h4>Od początku</h4><div class="bm">${all} ${sesje(all)} · ${fmtH(allH)} godz. · ${new Set(plays.map(p=>p.system)).size} systemów · pierwsza sesja ${esc([...plays].sort((a,b)=>a.date.localeCompare(b.date))[0].date.split('-').reverse().join('.'))}</div></div>`;
+}
+$('#statsBody').onclick=e=>{const b=e.target.closest('[data-m]');if(b){sMetric=b.dataset.m;renderStats()}};
+$('#yPrev').onclick=()=>{sYear--;renderStats()};
+$('#yNext').onclick=()=>{sYear++;renderStats()};
 
 /* ---------- arkusze ---------- */
 const open=id=>{$(id).classList.add('open');document.body.style.overflow='hidden'};
@@ -258,7 +464,7 @@ function edit(b){
   F.forEach(k=>$('#'+k).value=d[k]??'');setPhoto(d.photo);lentVis();open('#editSheet');
   if(!b)setTimeout(()=>$('#title').focus(),50);
 }
-$('#addBtn').onclick=()=>edit();
+$('#addBtn').onclick=()=>view==='plays'?editPlay():edit();
 $('#list').onclick=e=>{const c=e.target.closest('.book');if(c)edit(books.find(b=>b.id===c.dataset.id))};
 $('#form').onsubmit=e=>{
   e.preventDefault();const d={};F.forEach(k=>d[k]=$('#'+k).value.trim());d.photo=photo;
@@ -291,7 +497,7 @@ $('#fSort').onchange=e=>{state.sort=e.target.value;render()};
 /* ---------- menu: statystyki, kopia, eksport ---------- */
 $('#menuBtn').onclick=()=>{
   const own=books.filter(b=>b.status!=='want'),val=own.reduce((s,b)=>s+(parseFloat(String(b.price).replace(',','.'))||0),0);
-  $('#stats').innerHTML=`<div class="stat"><b>${own.length}</b><span>podręczników</span></div><div class="stat"><b>${new Set(own.map(b=>b.system)).size}</b><span>systemów</span></div><div class="stat"><b>${Math.round(val)}</b><span>zł wartości</span></div>`;
+  $('#stats').innerHTML=`<div class="stat"><b>${own.length}</b><span>podręczników</span></div><div class="stat"><b>${new Set(own.map(b=>b.system)).size}</b><span>systemów</span></div><div class="stat"><b>${Math.round(val)}</b><span>zł wartości</span></div><div class="stat"><b>${plays.length}</b><span>zapisanych sesji</span></div><div class="stat"><b>${fmtH(plays.reduce((s,p)=>s+hrs(p),0))}</b><span>godzin gry</span></div>`;
   $('#copybox').style.display='none';open('#menuSheet');
 };
 async function deliver(name,text,mime){
@@ -301,22 +507,30 @@ async function deliver(name,text,mime){
   const box=$('#copybox');box.value=text;box.style.display='block';
 }
 const stamp=()=>new Date().toISOString().slice(0,10);
-$('#expJson').onclick=()=>deliver(`biblioteka-trpg-${stamp()}.json`,JSON.stringify({app:'biblioteka-trpg',v:1,books},null,1),'application/json');
+$('#expJson').onclick=()=>deliver(`biblioteka-trpg-${stamp()}.json`,JSON.stringify({app:'biblioteka-trpg',v:2,books,plays},null,1),'application/json');
 $('#expCsv').onclick=()=>{
   const H=['Tytuł','System','Edycja','Typ','Wydawca','Format','Język','Status','Komu pożyczony','Stan','Rok','ISBN','Cena','Gdzie stoi','Notatki'];
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
   const rows=books.map(b=>F.map(k=>q(k==='status'?STATUS[b[k]]:b[k])).join(';'));
   deliver(`biblioteka-trpg-${stamp()}.csv`,'﻿'+[H.map(q).join(';'),...rows].join('\r\n'),'text/csv');
 };
+$('#expPlaysCsv').onclick=()=>{
+  const H=['Data','System','Kampania / przygoda','Rola','Gdzie','Godziny','Kto grał','Ocena','Notatki'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=[...plays].sort((a,b)=>a.date.localeCompare(b.date)).map(p=>[p.date,p.system,p.campaign,p.role==='gm'?'MG':'Gracz',p.mode,String(p.hours||'').replace('.',','),p.players,p.rating||'',p.notes].map(q).join(';'));
+  deliver(`sesje-trpg-${stamp()}.csv`,'﻿'+[H.map(q).join(';'),...rows].join('\r\n'),'text/csv');
+};
 $('#impJson').onclick=()=>$('#impFile').click();
 $('#impFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const d=JSON.parse(r.result),arr=Array.isArray(d)?d:d.books;if(!Array.isArray(arr))throw 0;
     const clean=arr.filter(b=>b&&b.title&&b.system).map(b=>{const o={id:String(b.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),added:+b.added||Date.now(),photo:typeof b.photo==='string'&&b.photo.startsWith('data:image/')?b.photo:''};F.forEach(k=>o[k]=String(b[k]??''));if(!STATUS[o.status])o.status='own';return o});
-    confirmBox(`Wczytać ${clean.length} pozycji? Obecna lista (${books.length}) zostanie zastąpiona.`,()=>{books=clean;save();close($('#menuSheet'));refresh();toast('Wczytano kopię')})}
+    const PK=['date','hours','system','campaign','role','mode','players','notes'];
+    const cleanP=Array.isArray(d.plays)?d.plays.filter(p=>p&&/^\d{4}-\d{2}-\d{2}$/.test(p.date)&&p.system).map(p=>{const o={id:String(p.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),added:+p.added||Date.now(),rating:Math.min(5,Math.max(0,+p.rating||0))};PK.forEach(k=>o[k]=String(p[k]??''));if(o.role!=='player')o.role='gm';return o}):null;
+    confirmBox(`Wczytać ${clean.length} podręczników${cleanP?` i ${cleanP.length} sesji`:''}? Obecne dane zostaną zastąpione.`,()=>{books=clean;save();if(cleanP){plays=cleanP;savePlays()}close($('#menuSheet'));refresh();toast('Wczytano kopię')})}
     catch(x){toast('To nie jest poprawny plik kopii')}};r.readAsText(f)};
 
 /* ---------- start ---------- */
-(async()=>{await DB.open();books=(await DB.get())||[];refresh();
+(async()=>{await DB.open();books=(await DB.get())||[];plays=(await DB.getK('plays'))||[];refresh();
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
   try{if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 })();
