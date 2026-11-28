@@ -236,8 +236,8 @@ body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
     <div class="grid">
       <div><label for="p_date">Data *</label><input id="p_date" type="date" required></div>
       <div><label for="p_hours">Czas gry (godz.)</label><input id="p_hours" inputmode="decimal" placeholder="np. 4 lub 3,5"></div>
-      <div class="full"><label for="p_book">Podręcznik podstawowy z półki</label><select id="p_book"></select></div>
-      <div class="full"><label for="p_system">System *</label><input id="p_system" list="sysList" required placeholder="np. Warhammer FRP"></div>
+      <div class="full"><label for="p_book">System *</label><select id="p_book" required></select><input type="hidden" id="p_system">
+        <p class="note" id="p_bookHint" hidden>Na liście są Twoje podręczniki oznaczone jako „Podręcznik główny”. Brakuje systemu? Dodaj jego podręcznik główny na półce.</p></div>
       <div class="full"><label for="p_campaign">Kampania / przygoda</label><input id="p_campaign" list="campList" placeholder="np. Wewnętrzny Wróg, Curse of Strahd"></div>
       <div><label for="p_role">Moja rola</label><select id="p_role"><option value="gm">Mistrz Gry</option><option value="player">Gracz</option></select></div>
       <div><label for="p_mode">Gdzie</label><select id="p_mode"><option>Przy stole</option><option>Online</option><option>Konwent</option></select></div>
@@ -463,11 +463,12 @@ function editPlay(p){
   const last=[...plays].sort((a,b)=>b.date.localeCompare(a.date))[0];
   const d=p||{date:today(),role:last?last.role:'gm',mode:'Przy stole',system:pst.sys||(last?last.system:''),campaign:pst.sys&&last&&last.system!==pst.sys?'':(last?last.campaign:''),players:last&&(!pst.sys||last.system===pst.sys)?last.players:'',hours:''};
   PF.forEach(k=>$('#p_'+k).value=d[k]??'');rating=p?+p.rating||0:0;drawStars();
-  fillBookPick(p&&p.bookId&&books.some(b=>b.id===p.bookId)?p.bookId:'');drawChips();open('#playSheet');
+  fillBookPick(p?p.bookId:(last&&!pst.sys?last.bookId:''),d.system);drawChips();open('#playSheet');
 }
 $('#pList').onclick=e=>{const c=e.target.closest('.play');if(c)editPlay(plays.find(p=>p.id===c.dataset.id))};
 $('#pform').onsubmit=e=>{
-  e.preventDefault();const d={};PF.forEach(k=>d[k]=$('#p_'+k).value.trim());d.rating=rating;d.bookId=$('#p_book').value;
+  e.preventDefault();const d={};PF.forEach(k=>d[k]=$('#p_'+k).value.trim());d.rating=rating;d.bookId=$('#p_book').value==='__legacy'?'':$('#p_book').value;
+  if(!d.system){toast('Wybierz system');return}
   d.players=splitNames(d.players).join(', ');addPlayers(splitNames(d.players));
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d.date)){toast('Podaj datę');return}
   if(pEdit){Object.assign(plays.find(p=>p.id===pEdit),d);toast('Zapisano zmiany')}
@@ -476,16 +477,21 @@ $('#pform').onsubmit=e=>{
 };
 $('#pDel').onclick=()=>confirmBox('Usunąć tę sesję?',()=>{plays=plays.filter(p=>p.id!==pEdit);savePlays();close($('#playSheet'));refresh();toast('Usunięto')});
 
-function fillBookPick(sel){
-  const own=books.filter(b=>b.status!=='want'&&!isPending(b)&&b.type==='Podręcznik główny'),g={};
-  own.forEach(b=>(g[b.system]=g[b.system]||[]).push(b));
-  $('#p_book').innerHTML='<option value="">— wybierz, żeby ustawić system —</option>'+Object.keys(g).sort((a,b)=>a.localeCompare(b,'pl')).map(s=>
-    `<optgroup label="${esc(s)}">${g[s].sort((a,b)=>(a.edition||'').localeCompare(b.edition||'','pl')||a.title.localeCompare(b.title,'pl')).map(b=>`<option value="${esc(b.id)}">${esc(b.title)}${b.edition?' ('+esc(b.edition)+')':''}</option>`).join('')}</optgroup>`).join('');
-  $('#p_book').value=sel||'';$('#p_book').disabled=!own.length;
+const coreBooks=()=>books.filter(b=>b.status!=='want'&&!isPending(b)&&b.type==='Podręcznik główny')
+  .sort((a,b)=>a.system.localeCompare(b.system,'pl')||(a.edition||'').localeCompare(b.edition||'','pl')||a.title.localeCompare(b.title,'pl'));
+function fillBookPick(selId,sysName){
+  const core=coreBooks();
+  let html=`<option value="">${core.length?'— wybierz podręcznik —':'Najpierw dodaj podręcznik główny na półce'}</option>`+
+    core.map(b=>`<option value="${esc(b.id)}">${esc(b.system)}${b.edition?' '+esc(b.edition):''} — ${esc(b.title)}</option>`).join('');
+  let pick=core.find(b=>b.id===selId)||core.find(b=>sysName&&b.system===sysName);
+  /* starsze sesje z systemem, którego podręcznika nie ma w bibliotece */
+  if(!pick&&sysName)html+=`<option value="__legacy" data-sys="${esc(sysName)}">${esc(sysName)} (brak podręcznika w bibliotece)</option>`;
+  $('#p_book').innerHTML=html;
+  $('#p_book').value=pick?pick.id:(sysName?'__legacy':'');
+  $('#p_system').value=pick?pick.system:(sysName||'');
+  $('#p_bookHint').hidden=core.length>3;
 }
-$('#p_book').onchange=e=>{const b=books.find(x=>x.id===e.target.value);if(!b)return;
-  $('#p_system').value=b.system;
-  toast('System: '+b.system)};
+$('#p_book').onchange=e=>{const v=e.target.value,b=books.find(x=>x.id===v);$('#p_system').value=b?b.system:v==='__legacy'?e.target.selectedOptions[0].dataset.sys:''};
 
 /* ---------- gracze ---------- */
 const splitNames=v=>[...new Set(String(v||'').split(/[,;]+/).map(x=>x.trim()).filter(Boolean))];
