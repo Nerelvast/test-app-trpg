@@ -236,7 +236,7 @@ body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
     <div class="grid">
       <div><label for="p_date">Data *</label><input id="p_date" type="date" required></div>
       <div><label for="p_hours">Czas gry (godz.)</label><input id="p_hours" inputmode="decimal" placeholder="np. 4 lub 3,5"></div>
-      <div class="full"><label for="p_book">Podręcznik lub przygoda z półki</label><select id="p_book"></select></div>
+      <div class="full"><label for="p_book">Podręcznik podstawowy z półki</label><select id="p_book"></select></div>
       <div class="full"><label for="p_system">System *</label><input id="p_system" list="sysList" required placeholder="np. Warhammer FRP"></div>
       <div class="full"><label for="p_campaign">Kampania / przygoda</label><input id="p_campaign" list="campList" placeholder="np. Wewnętrzny Wróg, Curse of Strahd"></div>
       <div><label for="p_role">Moja rola</label><select id="p_role"><option value="gm">Mistrz Gry</option><option value="player">Gracz</option></select></div>
@@ -477,15 +477,14 @@ $('#pform').onsubmit=e=>{
 $('#pDel').onclick=()=>confirmBox('Usunąć tę sesję?',()=>{plays=plays.filter(p=>p.id!==pEdit);savePlays();close($('#playSheet'));refresh();toast('Usunięto')});
 
 function fillBookPick(sel){
-  const own=books.filter(b=>b.status!=='want'&&!isPending(b)),g={};
+  const own=books.filter(b=>b.status!=='want'&&!isPending(b)&&b.type==='Podręcznik główny'),g={};
   own.forEach(b=>(g[b.system]=g[b.system]||[]).push(b));
   $('#p_book').innerHTML='<option value="">— wybierz, żeby ustawić system —</option>'+Object.keys(g).sort((a,b)=>a.localeCompare(b,'pl')).map(s=>
-    `<optgroup label="${esc(s)}">${g[s].sort((a,b)=>(a.type.startsWith('Przygoda')?0:1)-(b.type.startsWith('Przygoda')?0:1)||a.title.localeCompare(b.title,'pl')).map(b=>`<option value="${esc(b.id)}">${esc(b.title)}${b.edition?' ('+esc(b.edition)+')':''}</option>`).join('')}</optgroup>`).join('');
+    `<optgroup label="${esc(s)}">${g[s].sort((a,b)=>(a.edition||'').localeCompare(b.edition||'','pl')||a.title.localeCompare(b.title,'pl')).map(b=>`<option value="${esc(b.id)}">${esc(b.title)}${b.edition?' ('+esc(b.edition)+')':''}</option>`).join('')}</optgroup>`).join('');
   $('#p_book').value=sel||'';$('#p_book').disabled=!own.length;
 }
 $('#p_book').onchange=e=>{const b=books.find(x=>x.id===e.target.value);if(!b)return;
   $('#p_system').value=b.system;
-  if(/Przygoda|Setting/.test(b.type))$('#p_campaign').value=b.title;
   toast('System: '+b.system)};
 
 /* ---------- gracze ---------- */
