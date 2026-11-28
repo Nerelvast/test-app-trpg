@@ -136,6 +136,7 @@ body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 .chips:empty{display:none}
 .chips button{min-height:38px;padding:0 14px;border-radius:19px;border:1px solid var(--line);background:var(--field);cursor:pointer;font-size:15px}
 .chips button.on{background:var(--sea);border-color:var(--sea);color:#fff;font-weight:600}
+.chips button.add{border-style:dashed;color:var(--sea);font-weight:600;background:transparent}
 .person{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:8px;width:100%;text-align:left;padding:10px 12px;cursor:pointer}
 .av{width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 17px/1 Georgia,serif}
 .pstat{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;font-size:14px}
@@ -240,7 +241,7 @@ body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
       <div class="full"><label for="p_campaign">Kampania / przygoda</label><input id="p_campaign" list="campList" placeholder="np. Wewnętrzny Wróg, Curse of Strahd"></div>
       <div><label for="p_role">Moja rola</label><select id="p_role"><option value="gm">Mistrz Gry</option><option value="player">Gracz</option></select></div>
       <div><label for="p_mode">Gdzie</label><select id="p_mode"><option>Przy stole</option><option>Online</option><option>Konwent</option></select></div>
-      <div class="full"><label for="p_players">Kto grał</label><div class="chips" id="p_chips"></div><input id="p_players" placeholder="stuknij powyżej albo wpisz nowe imię, po przecinku"></div>
+      <div class="full"><label>Kto grał</label><div class="chips" id="p_chips"></div><input type="hidden" id="p_players"></div>
       <div class="full"><label>Ocena sesji</label><div class="stars" id="p_stars"></div></div>
       <div class="full"><label for="p_notes">Notatki</label><textarea id="p_notes" placeholder="Co się wydarzyło, co przygotować na następny raz…"></textarea></div>
     </div>
@@ -495,11 +496,13 @@ function addPlayers(names){let ch=false;names.forEach(n=>{if(n&&!findPerson(n)){
 function drawChips(){
   const cur=splitNames($('#p_players').value);
   const order=players.map(p=>[p.name,plays.filter(x=>splitNames(x.players).some(n=>sameName(n,p.name))).length]).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pl'));
-  $('#p_chips').innerHTML=order.map(([n])=>`<button type="button" data-n="${esc(n)}" class="${cur.some(c=>sameName(c,n))?'on':''}">${esc(n)}</button>`).join('');
+  /* imiona z historii, których nie ma w bazie (np. usunięty gracz), nadal widoczne i zaznaczone */
+  cur.filter(c=>!findPerson(c)).forEach(c=>order.push([c,0]));
+  $('#p_chips').innerHTML=order.map(([n])=>`<button type="button" data-n="${esc(n)}" class="${cur.some(c=>sameName(c,n))?'on':''}" aria-pressed="${cur.some(c=>sameName(c,n))}">${esc(n)}</button>`).join('')+
+    '<button type="button" class="add" data-add>+ Nowy gracz</button>';
 }
-$('#p_chips').onclick=e=>{const b=e.target.closest('button');if(!b)return;const n=b.dataset.n;let cur=splitNames($('#p_players').value);
+$('#p_chips').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.hasAttribute('data-add')){editPerson();return}const n=b.dataset.n;let cur=splitNames($('#p_players').value);
   cur=cur.some(c=>sameName(c,n))?cur.filter(c=>!sameName(c,n)):[...cur,n];$('#p_players').value=cur.join(', ');drawChips()};
-$('#p_players').addEventListener('input',drawChips);
 const initials=n=>n.split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase();
 function personStats(name){
   const ps=plays.filter(x=>splitNames(x.players).some(n=>sameName(n,name))).sort((a,b)=>b.date.localeCompare(a.date));
@@ -534,10 +537,12 @@ $('#peform').onsubmit=e=>{e.preventDefault();
   const other=findPerson(name);if(other&&other.id!==peEdit){toast('Taki gracz już jest');return}
   if(peEdit){const p=players.find(x=>x.id===peEdit),old=p.name;p.name=name;p.note=note;
     if(old!==name){plays.forEach(x=>{const a=splitNames(x.players);if(a.some(n=>sameName(n,old)))x.players=a.map(n=>sameName(n,old)?name:n).join(', ')});
-      books.forEach(b=>{if(b.lentTo&&sameName(b.lentTo,old))b.lentTo=name});savePlays();save()}
+      books.forEach(b=>{if(b.lentTo&&sameName(b.lentTo,old))b.lentTo=name});savePlays();save();
+      $('#p_players').value=splitNames($('#p_players').value).map(n=>sameName(n,old)?name:n).join(', ')}
     toast('Zapisano')}
-  else{players.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,note,added:Date.now()});toast('Dodano gracza')}
-  savePlayers();close($('#personSheet'));refresh()};
+  else{players.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,note,added:Date.now()});toast('Dodano gracza');
+    if($('#playSheet').classList.contains('open'))$('#p_players').value=[...splitNames($('#p_players').value),name].join(', ')}
+  savePlayers();close($('#personSheet'));refresh();if($('#playSheet').classList.contains('open'))drawChips()};
 $('#peDel').onclick=()=>{const p=players.find(x=>x.id===peEdit);confirmBox(`Usunąć gracza „${p.name}”? Jego imię zostanie w historii sesji.`,()=>{players=players.filter(x=>x.id!==peEdit);savePlayers();close($('#personSheet'));refresh();toast('Usunięto')})};
 
 /* ---------- statystyki ---------- */

@@ -1,5 +1,5 @@
 // Online: pobiera najnowszą wersję i odświeża kopię. Offline: używa zapisanej kopii.
-const CACHE = 'trpg-lib-v4';
+const CACHE = 'trpg-lib-v5';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'zxing.min.js'];
 
 self.addEventListener('install', e => {
